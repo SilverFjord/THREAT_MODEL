@@ -1,0 +1,26 @@
+{
+  "version": "2.6.1-RC1",
+  "summary": {
+    "title": "New Threat Model",
+    "owner": "Silverfjord",
+    "description": "4 trust boundaries: On-Site/External Principals, Internal Service Layer, AI Subsystem, Database Layer\n5 External Entities: Guest, Staff, Surveillance Cameras, External IdP\n5 Processes: Booking API, Pseudonymization Service, Media Linker Service, AI Facial Recognition Service, Audit Logging Service\n4 Data Stores: PII DB, Pseudonymized DB, Media DB, Audit Log Store\n12 STRIDE-trusler fordelt på komponentene — inkludert T9 og T10 som begge er AI-spesifikke",
+    "id": 0
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "id": 0,
+        "title": "New STRIDE diagram",
+        "diagramType": "STRIDE",
+        "placeholder": "New STRIDE diagram description",
+        "thumbnail": "./public/content/images/thumbnail.stride.jpg",
+        "version": "2.6.1-RC1",
+        "cells": []
+      }
+    ],
+    "diagramTop": 1,
+    "reviewer": "",
+    "threatTop": 0
+  }
+}
