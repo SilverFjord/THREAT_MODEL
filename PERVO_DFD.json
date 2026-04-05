@@ -1,0 +1,871 @@
+{
+  "version": "2.2.0",
+  "summary": {
+    "title": "PERVO - Privacy-Enhanced Resort and Vacancy Online",
+    "owner": "TDT4237 Group",
+    "description": "DFD for the PERVO system managing bookings and logistics of a luxury resort, including AI-based facial recognition for access control.",
+    "id": 0
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "id": 0,
+        "title": "PERVO System Data Flow",
+        "diagramType": "STRIDE",
+        "placeholder": "PERVO DFD",
+        "thumbnail": "./public/content/images/thumbnail.stride.jpg",
+        "version": "2.2.0",
+        "cells": [
+
+          {
+            "type": "tm.BoundaryBox",
+            "position": { "x": 10, "y": 60 },
+            "size": { "width": 180, "height": 620 },
+            "angle": 0,
+            "id": "boundary-internet",
+            "z": 0,
+            "data": {
+              "name": "On-Site / External Principals",
+              "description": "Physical guests, on-site staff, cameras and the external IdP",
+              "isTrustBoundary": true
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.BoundaryBox",
+            "position": { "x": 210, "y": 100 },
+            "size": { "width": 480, "height": 340 },
+            "angle": 0,
+            "id": "boundary-services",
+            "z": 0,
+            "data": {
+              "name": "Internal Service Layer",
+              "description": "Trusted internal microservices",
+              "isTrustBoundary": true
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.BoundaryBox",
+            "position": { "x": 710, "y": 200 },
+            "size": { "width": 240, "height": 320 },
+            "angle": 0,
+            "id": "boundary-ai",
+            "z": 0,
+            "data": {
+              "name": "AI Subsystem Boundary",
+              "description": "Isolated AI facial recognition and media processing",
+              "isTrustBoundary": true
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.BoundaryBox",
+            "position": { "x": 210, "y": 460 },
+            "size": { "width": 740, "height": 240 },
+            "angle": 0,
+            "id": "boundary-db",
+            "z": 0,
+            "data": {
+              "name": "Database Layer",
+              "description": "Isolated database tier — no direct external access",
+              "isTrustBoundary": true
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Actor",
+            "size": { "width": 140, "height": 60 },
+            "position": { "x": 25, "y": 90 },
+            "angle": 0,
+            "id": "actor-guest",
+            "z": 1,
+            "data": {
+              "name": "Guest",
+              "description": "Resort guest. Books stay online (pre-arrival) and is physically present on-site. Registered under pseudonym in operational systems.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "threats": []
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Actor",
+            "size": { "width": 140, "height": 60 },
+            "position": { "x": 25, "y": 280 },
+            "angle": 0,
+            "id": "actor-staff",
+            "z": 1,
+            "data": {
+              "name": "Staff",
+              "description": "Resort staff operating the system on-site. Accesses only pseudonymized data and booking information. Never sees guest PII.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "threats": []
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Actor",
+            "size": { "width": 140, "height": 60 },
+            "position": { "x": 25, "y": 470 },
+            "angle": 0,
+            "id": "actor-cameras",
+            "z": 1,
+            "data": {
+              "name": "Surveillance Cameras",
+              "description": "Physical on-site IP cameras streaming video feed to the AI facial recognition service for access control and intruder detection.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "threats": []
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Actor",
+            "size": { "width": 140, "height": 60 },
+            "position": { "x": 25, "y": 620 },
+            "angle": 0,
+            "id": "actor-idp",
+            "z": 1,
+            "data": {
+              "name": "External IdP",
+              "description": "External identity provider. Issues JWTs for authenticated staff and guests. Not under direct system control.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "threats": [
+                {
+                  "id": "threat-8",
+                  "title": "T8 - Credential theft yields impersonated JWT",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Spoofing",
+                  "description": "An attacker steals staff or admin credentials and authenticates to the external IdP, receiving a valid JWT that grants system access under a spoofed identity. Enables impersonation of legitimate users.",
+                  "mitigation": "Enforce MFA on IdP. Validate JWT audience and scope claims. Monitor for anomalous login locations.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 8,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Process",
+            "size": { "width": 130, "height": 60 },
+            "position": { "x": 225, "y": 170 },
+            "angle": 0,
+            "id": "process-booking",
+            "z": 2,
+            "data": {
+              "name": "Booking API",
+              "description": "Handles online pre-arrival bookings from guests and on-site staff requests. Authenticates via External IdP. Entry point exposed to external network for pre-arrival bookings.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "handlesCardPayment": true,
+              "handlesGoodsOrServices": true,
+              "isWebApplication": true,
+              "privilegeLevel": "Application",
+              "threats": [
+                {
+                  "id": "threat-1",
+                  "title": "T1 - Spoofing of staff identity via stolen credentials",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Spoofing",
+                  "description": "Attacker uses stolen staff credentials (e.g., from an unattended on-site terminal) to spoof a legitimate staff identity and access the Booking API with staff-level privileges.",
+                  "mitigation": "Enforce MFA. Implement session binding to device. Auto-lock terminals after inactivity (SR2).",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 1,
+                  "score": ""
+                },
+                {
+                  "id": "threat-2",
+                  "title": "T2 - SQL injection via booking request fields",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Tampering",
+                  "description": "Attacker submits crafted input in booking request fields that is passed unsanitised to the database layer, enabling modification or exfiltration of booking and guest records.",
+                  "mitigation": "Use parameterised queries / ORM. Input validation. Apply SR6 (PII access control).",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 2,
+                  "score": ""
+                },
+                {
+                  "id": "threat-3",
+                  "title": "T3 - Session hijacking at on-site terminal",
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Information Disclosure",
+                  "description": "An adversary physically accesses an unattended authenticated staff terminal and hijacks the active session, gaining access to booking data and guest pseudonyms without re-authentication.",
+                  "mitigation": "Short session timeout (SR2). Screen lock after inactivity. Physical access controls on staff terminals.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 3,
+                  "score": ""
+                },
+                {
+                  "id": "threat-4",
+                  "title": "T4 - DDoS disrupts booking and on-site access",
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Denial of Service",
+                  "description": "A volumetric DDoS attack floods the Booking API, making it unavailable. Since access control depends on system availability (AI matching), this may also disrupt physical access management at the resort.",
+                  "mitigation": "Rate limiting. CDN/WAF with DDoS mitigation. Offline fallback access control procedure.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 4,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Process",
+            "size": { "width": 160, "height": 60 },
+            "position": { "x": 410, "y": 170 },
+            "angle": 0,
+            "id": "process-pseudo",
+            "z": 2,
+            "data": {
+              "name": "Pseudonymization Service",
+              "description": "Maps real guest PII to pseudonymous identifiers. The only internal service authorised to bridge the PII DB and Pseudonymized DB. Processes new guest registrations and manages the pseudonym lifecycle.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "Privileged",
+              "threats": [
+                {
+                  "id": "threat-5",
+                  "title": "T5 - Broken access control allows privilege escalation to PII",
+                  "status": "Open",
+                  "severity": "Critical",
+                  "type": "Elevation of Privilege",
+                  "description": "A staff user with access to the Pseudonymization Service exploits a missing authorisation check to invoke identity resolution functions, obtaining real PII records behind guest pseudonyms.",
+                  "mitigation": "Enforce role-based access control (SR3). Staff roles must be denied PII-resolution endpoints. Regular access control audits.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 5,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Process",
+            "size": { "width": 160, "height": 60 },
+            "position": { "x": 380, "y": 290 },
+            "angle": 0,
+            "id": "process-medialinkr",
+            "z": 2,
+            "data": {
+              "name": "Media Linker Service",
+              "description": "Controlled service that links media subjects (AI-identified faces) to pseudonymous identities for operational purposes. Access strictly scoped and audited.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "Privileged",
+              "threats": []
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Process",
+            "size": { "width": 160, "height": 60 },
+            "position": { "x": 225, "y": 390 },
+            "angle": 0,
+            "id": "process-audit",
+            "z": 2,
+            "data": {
+              "name": "Audit Logging Service",
+              "description": "Receives audit events from all internal services. Write-only from service perspective. Logs stored separately and protected from modification.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "System",
+              "threats": []
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Process",
+            "size": { "width": 160, "height": 70 },
+            "position": { "x": 730, "y": 230 },
+            "angle": 0,
+            "id": "process-ai",
+            "z": 2,
+            "data": {
+              "name": "AI Facial Recognition Service",
+              "description": "Receives video streams from on-site surveillance cameras. Matches faces against registered guests and staff in the biometric/pseudonymized database for access control and intruder detection. Returns match confirmation only — never exposes PII.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "handlesCardPayment": false,
+              "handlesGoodsOrServices": false,
+              "isWebApplication": false,
+              "privilegeLevel": "Privileged",
+              "threats": [
+                {
+                  "id": "threat-9",
+                  "title": "T9 (AI) - Manipulated video feed bypasses facial recognition",
+                  "status": "Open",
+                  "severity": "Critical",
+                  "type": "Tampering",
+                  "description": "An attacker (e.g., sophisticated intruder or insider) injects a manipulated or pre-recorded video feed into the camera stream, causing the AI to match an authorised guest/staff face and grant physical access to an unauthorised individual.",
+                  "mitigation": "Authenticate camera feeds (signed video streams). Anomaly detection on feed metadata. SR4 (confidence threshold enforcement).",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 9,
+                  "score": ""
+                },
+                {
+                  "id": "threat-10",
+                  "title": "T10 (AI) - AI model extraction exposes biometric identities",
+                  "status": "Open",
+                  "severity": "Critical",
+                  "type": "Information Disclosure",
+                  "description": "An adversary with API access systematically queries the AI facial recognition service with crafted inputs to extract the underlying model via model-stealing attacks, subsequently reconstructing biometric embeddings that can be linked to real guest identities.",
+                  "mitigation": "Rate-limit and monitor AI API queries. SR5 (restrict model access to admins only). Differential privacy on model outputs.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 10,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Store",
+            "size": { "width": 150, "height": 60 },
+            "position": { "x": 225, "y": 490 },
+            "angle": 0,
+            "id": "store-pii",
+            "z": 2,
+            "data": {
+              "name": "PII Database",
+              "description": "Stores real guest identities, billing information, and personal data. Accessible only by the Pseudonymization Service. Never directly queried by staff-facing services.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isALog": false,
+              "isEncrypted": true,
+              "isSigned": false,
+              "storesCredentials": false,
+              "storesInventory": false,
+              "threats": [
+                {
+                  "id": "threat-6",
+                  "title": "T6 - SQL injection reveals full guest PII",
+                  "status": "Open",
+                  "severity": "Critical",
+                  "type": "Information Disclosure",
+                  "description": "A successful SQL injection attack against the PII database (via a compromised or poorly sanitised internal service) exposes real names, billing information, and personal data of all registered guests.",
+                  "mitigation": "Parameterised queries. Strict network-level access control to PII DB. SR6 (encryption of data in transit between services and PII DB).",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 6,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Store",
+            "size": { "width": 170, "height": 60 },
+            "position": { "x": 430, "y": 490 },
+            "angle": 0,
+            "id": "store-pseudo",
+            "z": 2,
+            "data": {
+              "name": "Pseudonymized Database",
+              "description": "Stores operational records (bookings, food preferences, special requests) linked to pseudonymous identifiers. Accessible by Booking API and AI matching service (read-only for match).",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isALog": false,
+              "isEncrypted": true,
+              "isSigned": false,
+              "storesCredentials": false,
+              "storesInventory": false,
+              "threats": [
+                {
+                  "id": "threat-7",
+                  "title": "T7 - Unauthorized modification of guest preferences",
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Tampering",
+                  "description": "A staff member or compromised service account modifies guest preference or booking records without authorisation, potentially disrupting personalised services or exposing operational information about specific pseudonymous guests.",
+                  "mitigation": "Role-based access control (SR3): staff read-only on pseudonymized DB. Audit all write operations (SR8).",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 7,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Store",
+            "size": { "width": 150, "height": 60 },
+            "position": { "x": 660, "y": 490 },
+            "angle": 0,
+            "id": "store-media",
+            "z": 2,
+            "data": {
+              "name": "Media Database",
+              "description": "Stores surveillance recordings and processed video data. Linked to pseudonymous identifiers, not PII directly. Access strictly controlled and audited.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isALog": false,
+              "isEncrypted": true,
+              "isSigned": false,
+              "storesCredentials": false,
+              "storesInventory": false,
+              "threats": [
+                {
+                  "id": "threat-12",
+                  "title": "T12 - Unauthorized access to surveillance footage",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Information Disclosure",
+                  "description": "An attacker or insider with elevated privileges accesses the media database directly, retrieving surveillance footage that reveals the presence, activities, and interactions of high-profile guests.",
+                  "mitigation": "Strict access control on media DB. Encrypt stored recordings. Audit all access. Separate media DB credentials from other services.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 12,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Store",
+            "size": { "width": 150, "height": 60 },
+            "position": { "x": 225, "y": 610 },
+            "angle": 0,
+            "id": "store-audit",
+            "z": 2,
+            "data": {
+              "name": "Audit Log Store",
+              "description": "Write-only, append-only store for all system audit events. Physically and logically separated from operational databases.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isALog": true,
+              "isEncrypted": true,
+              "isSigned": true,
+              "storesCredentials": false,
+              "storesInventory": false,
+              "threats": [
+                {
+                  "id": "threat-11",
+                  "title": "T11 - Log tampering to cover unauthorized access",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Repudiation",
+                  "description": "An attacker or malicious insider modifies or deletes audit log entries to erase evidence of unauthorised data access or privilege escalation, enabling undetected breach of guest privacy.",
+                  "mitigation": "Append-only log store with cryptographic signing. SR8 (encrypted and signed audit trail). Offsite log replication.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "number": 11,
+                  "score": ""
+                }
+              ]
+            },
+            "attrs": {}
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "actor-guest" },
+            "target": { "id": "process-booking" },
+            "vertices": [],
+            "id": "flow-1",
+            "z": 3,
+            "data": {
+              "name": "Online booking request (HTTPS/TLS)",
+              "description": "Guest submits booking online prior to arrival. Encrypted channel.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": true,
+              "protocol": "HTTPS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "actor-staff" },
+            "target": { "id": "process-booking" },
+            "vertices": [],
+            "id": "flow-2",
+            "z": 3,
+            "data": {
+              "name": "On-site staff request (internal network)",
+              "description": "Staff operates the system from on-site terminals on the internal resort network.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "HTTPS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-booking" },
+            "target": { "id": "actor-idp" },
+            "vertices": [],
+            "id": "flow-3",
+            "z": 3,
+            "data": {
+              "name": "Auth request",
+              "description": "Booking API forwards authentication request to external IdP.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": true,
+              "protocol": "HTTPS/OIDC",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "actor-idp" },
+            "target": { "id": "process-booking" },
+            "vertices": [],
+            "id": "flow-4",
+            "z": 3,
+            "data": {
+              "name": "JWT token",
+              "description": "External IdP returns signed JWT upon successful authentication.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": true,
+              "protocol": "HTTPS/OIDC",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-booking" },
+            "target": { "id": "process-pseudo" },
+            "vertices": [],
+            "id": "flow-5",
+            "z": 3,
+            "data": {
+              "name": "New guest registration (PII)",
+              "description": "Booking API forwards guest PII to Pseudonymization Service for registration and pseudonym generation.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-pseudo" },
+            "target": { "id": "store-pii" },
+            "vertices": [],
+            "id": "flow-6",
+            "z": 3,
+            "data": {
+              "name": "Store PII",
+              "description": "Pseudonymization Service writes real guest PII to the PII database.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-pseudo" },
+            "target": { "id": "store-pseudo" },
+            "vertices": [],
+            "id": "flow-7",
+            "z": 3,
+            "data": {
+              "name": "Store pseudonym + preferences",
+              "description": "Pseudonymization Service writes pseudonymous record and operational data to the Pseudonymized Database.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-booking" },
+            "target": { "id": "store-pseudo" },
+            "vertices": [],
+            "id": "flow-8",
+            "z": 3,
+            "data": {
+              "name": "Read/write booking data",
+              "description": "Booking API reads and updates booking records using pseudonymous guest identifiers.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "actor-cameras" },
+            "target": { "id": "process-ai" },
+            "vertices": [],
+            "id": "flow-9",
+            "z": 3,
+            "data": {
+              "name": "Video feed (on-site network)",
+              "description": "Surveillance cameras stream video over the secured on-site internal network to the AI Facial Recognition Service.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "RTSP/TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-ai" },
+            "target": { "id": "store-media" },
+            "vertices": [],
+            "id": "flow-10",
+            "z": 3,
+            "data": {
+              "name": "Store recordings + face embeddings",
+              "description": "AI service stores processed video recordings and anonymised face embeddings in the Media Database.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-ai" },
+            "target": { "id": "store-pseudo" },
+            "vertices": [],
+            "id": "flow-11",
+            "z": 3,
+            "data": {
+              "name": "Match lookup (pseudonym only)",
+              "description": "AI service queries pseudonymized DB to confirm whether a detected face matches a registered guest or staff member. Returns match/no-match only.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-medialinkr" },
+            "target": { "id": "store-pii" },
+            "vertices": [],
+            "id": "flow-12",
+            "z": 3,
+            "data": {
+              "name": "Controlled identity resolution",
+              "description": "Media Linker Service resolves pseudonymous media subject to real identity only under strictly authorised circumstances (e.g., law enforcement request). Fully audited.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal TLS",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-booking" },
+            "target": { "id": "process-audit" },
+            "vertices": [],
+            "id": "flow-13",
+            "z": 3,
+            "data": {
+              "name": "Audit events",
+              "description": "All access and modification events sent to Audit Logging Service.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-ai" },
+            "target": { "id": "process-audit" },
+            "vertices": [],
+            "id": "flow-14",
+            "z": 3,
+            "data": {
+              "name": "AI audit events",
+              "description": "AI recognition events, match results, and access decisions logged.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          },
+
+          {
+            "type": "tm.Flow",
+            "source": { "id": "process-audit" },
+            "target": { "id": "store-audit" },
+            "vertices": [],
+            "id": "flow-15",
+            "z": 3,
+            "data": {
+              "name": "Write audit log (append-only)",
+              "description": "Audit Logging Service writes signed, encrypted entries to the append-only Audit Log Store.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isEncrypted": true,
+              "isPublicNetwork": false,
+              "protocol": "Internal",
+              "threats": []
+            },
+            "attrs": {
+              "line": { "stroke": "#333333", "targetMarker": { "name": "block" }, "strokeDasharray": null }
+            }
+          }
+
+        ]
+      }
+    ],
+    "diagramTop": 1,
+    "reviewer": "",
+    "threatTop": 12
+  }
+}
